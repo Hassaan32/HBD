@@ -562,6 +562,17 @@
             z-index: 1001;
             transition: opacity 3s ease-in-out;
         }
+        @media (max-width: 768px) {
+            .boot-text,
+            .code-line,
+            .check-item,
+            .console-output {
+                white-space: pre-wrap;
+                word-break: break-word;
+                overflow-x: auto;
+            }
+        }
+
 
     </style>
 </head>
