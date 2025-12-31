@@ -508,6 +508,29 @@
             .friend-input input {
                 width: 250px;
             }
+            /* Fix text disappearing on small screens */
+            .scene-container,
+            .scene,
+            .code-block,
+            .boot-text,
+            .check-item,
+            .console-output {
+                overflow-x: auto;
+                word-break: normal;
+            }
+
+            /* Allow wrapping if needed */
+            .code-line {
+                white-space: pre-wrap;      /* allow wrap */
+                word-break: break-word;     /* break long words */
+            }
+
+            /* For boot text (typing lines) */
+            .boot-text {
+                white-space: pre-wrap;
+                word-break: break-word;
+            }
+
         }
         
         /* Instructions */
@@ -572,6 +595,15 @@
                 overflow-x: auto;
             }
         }
+        .code-block::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .code-block::-webkit-scrollbar-thumb {
+            background: #0af50a;
+            border-radius: 3px;
+        }
+
 
 
     </style>
