@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Programmer Birthday Animation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Source Code Pro', monospace;
+            background-color: #0a0a0a;
+            color: #0af50a;
+            overflow: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .start-screen {
+            text-align: center;
+            max-width: 800px;
+            padding: 40px;
+            background-color: rgba(17, 17, 17, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 0 40px rgba(0, 255, 0, 0.2);
+            border: 1px solid #333;
+            margin-bottom: 30px;
+        }
+        
+        .start-title {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(10, 245, 10, 0.7);
+        }
+        
+        .start-subtitle {
+            font-size: 20px;
+            color: #aaa;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+        
+        .start-button {
+            background-color: #0a3a0a;
+            color: #0af50a;
+            border: none;
+            padding: 18px 40px;
+            font-size: 22px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Source Code Pro', monospace;
+            transition: all 0.3s;
+            box-shadow: 0 0 15px rgba(10, 245, 10, 0.3);
+            margin-top: 20px;
+        }
+        
+        .start-button:hover {
+            background-color: #0c4a0c;
+            box-shadow: 0 0 25px rgba(10, 245, 10, 0.5);
+            transform: translateY(-3px);
+        }
+        
+        .start-button i {
+            margin-right: 12px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 900px;
+            height: 600px;
+            background-color: #111;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
+            overflow: hidden;
+            position: relative;
+            border: 1px solid #333;
+            display: none; /* Hidden until start */
+        }
+        
+        .terminal-header {
+            background-color: #222;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #333;
+        }
+        
+        .terminal-buttons {
+            display: flex;
+            gap: 8px;
+            margin-right: 20px;
+        }
+        
+        .terminal-button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .red { background-color: #ff5f56; }
+        .yellow { background-color: #ffbd2e; }
+        .green { background-color: #27ca3f; }
+        
+        .terminal-title {
+            font-size: 14px;
+            color: #aaa;
+        }
+        
+        .scene-container {
+            height: calc(100% - 45px);
+            padding: 30px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .scene {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 30px;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.8s;
+        }
+        
+        .scene.active {
+            display: block;
+            opacity: 1;
+        }
+        
+        /* Scene-specific styles */
+        .boot-text {
+            font-size: 22px;
+            line-height: 1.6;
+            margin-bottom: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 22px;
+            background-color: #0af50a;
+            margin-left: 5px;
+            animation: blink 1s infinite;
+            vertical-align: bottom;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .check-item {
+            font-size: 24px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            opacity: 0;
+            height: 0;
+            overflow: hidden;
+        }
+        
+        .check-item.show {
+            opacity: 1;
+            height: auto;
+            transition: opacity 0.5s;
+        }
+        
+        .checkmark {
+            color: #0af50a;
+            margin-right: 15px;
+            font-size: 20px;
+        }
+        
+        .code-block {
+            background-color: #1a1a1a;
+            padding: 25px;
+            border-radius: 8px;
+            border-left: 4px solid #0af50a;
+            font-size: 22px;
+            line-height: 1.5;
+            margin: 10px 0;
+            opacity: 0;
+            height: 0;
+            overflow: hidden;
+        }
+        
+        .code-block.show {
+            opacity: 1;
+            height: auto;
+            transition: all 0.8s;
+        }
+        
+        .keyword {
+            color: #ff6b9d;
+        }
+        
+        .function {
+            color: #61dafb;
+        }
+        
+        .string {
+            color: #9acd32;
+        }
+        
+        .number {
+            color: #ffa500;
+        }
+        
+        .console-output {
+            color: #0af50a;
+            font-size: 22px;
+            margin-top: 15px;
+            padding-left: 20px;
+            opacity: 0;
+            height: 0;
+            overflow: hidden;
+        }
+        
+        .console-output.show {
+            opacity: 1;
+            height: auto;
+            transition: opacity 0.8s;
+        }
+        
+        .cake-emoji {
+            font-size: 60px;
+            display: inline-block;
+            transform: scale(0);
+            margin-left: 15px;
+        }
+        
+        .cake-emoji.pop {
+            animation: pop 0.5s forwards;
+        }
+        
+        @keyframes pop {
+            0% { transform: scale(0); }
+            70% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .flash {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .flash.active {
+            animation: flash 0.3s;
+        }
+        
+        @keyframes flash {
+            0% { opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { opacity: 0; }
+        }
+        
+        .wish-list {
+            list-style: none;
+            font-size: 24px;
+            margin-top: 30px;
+        }
+        
+        .wish-item {
+            margin-bottom: 15px;
+            opacity: 0;
+            height: 0;
+            overflow: hidden;
+        }
+        
+        .wish-item.show {
+            opacity: 1;
+            height: auto;
+            transition: all 0.5s;
+        }
+        
+        .final-title {
+            font-size: 60px;
+            text-align: center;
+            color: #0af50a;
+            margin-top: 80px;
+            text-shadow: 0 0 10px rgba(10, 245, 10, 0.7);
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        
+        .final-title.show {
+            opacity: 1;
+            transform: scale(1);
+            transition: all 0.8s;
+        }
+        
+        .final-subtitle {
+            font-size: 28px;
+            text-align: center;
+            color: #aaa;
+            margin-top: 40px;
+            opacity: 0;
+        }
+        
+        .final-subtitle.show {
+            opacity: 1;
+            transition: opacity 1s 0.5s;
+        }
+        
+        .heart {
+            color: #ff4757;
+            font-size: 40px;
+            display: inline-block;
+            animation: heartbeat 1.5s infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        /* Controls */
+        .controls {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .btn {
+            background-color: #222;
+            color: #0af50a;
+            border: 1px solid #333;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-family: 'Source Code Pro', monospace;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #333;
+            box-shadow: 0 0 10px rgba(10, 245, 10, 0.3);
+        }
+        
+        .btn i {
+            margin-right: 8px;
+        }
+        
+        .btn-active {
+            background-color: #0a3a0a;
+            box-shadow: 0 0 10px rgba(10, 245, 10, 0.5);
+        }
+        
+        .audio-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 15px;
+        }
+        
+        .volume-slider {
+            width: 120px;
+        }
+        
+        /* Progress bar */
+        .progress-container {
+            width: 100%;
+            max-width: 900px;
+            height: 6px;
+            background-color: #222;
+            margin-bottom: 20px;
+            border-radius: 3px;
+            overflow: hidden;
+            display: none; /* Hidden until start */
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background-color: #0af50a;
+            width: 0%;
+            transition: width 0.5s;
+        }
+        
+        /* Friend name input */
+        .friend-input {
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .friend-input label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 18px;
+            color: #aaa;
+        }
+        
+        .friend-input input {
+            background-color: #111;
+            border: 1px solid #333;
+            color: #0af50a;
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-family: 'Source Code Pro', monospace;
+            font-size: 18px;
+            width: 300px;
+            text-align: center;
+        }
+        
+        .friend-input input:focus {
+            outline: none;
+            border-color: #0af50a;
+            box-shadow: 0 0 10px rgba(10, 245, 10, 0.3);
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .start-screen {
+                padding: 30px 20px;
+            }
+            
+            .start-title {
+                font-size: 36px;
+            }
+            
+            .start-subtitle {
+                font-size: 18px;
+            }
+            
+            .container {
+                height: 500px;
+            }
+            
+            .scene-container, .scene {
+                padding: 20px;
+            }
+            
+            .boot-text, .check-item, .code-block, .console-output {
+                font-size: 18px;
+            }
+            
+            .final-title {
+                font-size: 40px;
+                margin-top: 50px;
+            }
+            
+            .final-subtitle {
+                font-size: 22px;
+            }
+            
+            .wish-list {
+                font-size: 20px;
+            }
+            
+            .btn {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .start-title {
+                font-size: 28px;
+            }
+            
+            .container {
+                height: 450px;
+            }
+            
+            .boot-text, .check-item, .code-block, .console-output {
+                font-size: 16px;
+            }
+            
+            .final-title {
+                font-size: 32px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 200px;
+            }
+            
+            .friend-input input {
+                width: 250px;
+            }
+        }
+        
+        /* Instructions */
+        .instructions {
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 20px;
+            max-width: 800px;
+            line-height: 1.5;
+        }
+        
+        .typing-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 1em;
+            background-color: #0af50a;
+            margin-left: 2px;
+            vertical-align: bottom;
+            animation: blink 1s infinite;
+        }
+        
+        .code-line {
+            display: block;
+            margin-bottom: 5px;
+        }
+        /* Fade overlay */
+        #fadeOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 1000;
+            transition: opacity 3s ease-in-out;
+        }
+
+        /* Birthday message */
+        #birthdayMessage {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #0af50a;
+            font-size: 50px;
+            font-family: 'Source Code Pro', monospace;
+            text-align: center;
+            opacity: 0;
+            z-index: 1001;
+            transition: opacity 3s ease-in-out;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="start-screen">
+        <h1 class="start-title">🎂 Birthday Protocol Initialized</h1>
+        <p class="start-subtitle">
+            A programmer’s way of wishing a brother a blessed birthday.<br>
+            Written in code, powered by prayers, and sent from the heart.
+        </p>
+        
+        <div class="friend-input">
+            <label for="friendName">Birthday Boy:</label>
+            <input type="text" id="friendName" value="Muhammad Noman" maxlength="20" disabled>
+        </div>
+        
+        <button class="start-button" id="startBtn">
+            <i class="fas fa-play-circle"></i> START BIRTHDAY PROTOCOL
+        </button>
+        
+        <p class="instructions">
+            After starting, the animation will play automatically with 8 scenes.<br>
+            You can control music, sound effects, and restart at any time.
+        </p>
+    </div>
+    
+    <div class="progress-container" id="progressContainer">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+    
+    <div class="container" id="terminalContainer">
+        <div class="terminal-header">
+            <div class="terminal-buttons">
+                <div class="terminal-button red"></div>
+                <div class="terminal-button yellow"></div>
+                <div class="terminal-button green"></div>
+            </div>
+            <div class="terminal-title">birthday_protocol.exe</div>
+        </div>
+        
+        <div class="scene-container">
+            <!-- Scene 1: Boot Sequence -->
+            <div class="scene" id="scene1">
+                <div class="boot-text" id="bootLine1"></div>
+                <div class="boot-text" id="bootLine2"></div>
+                <div class="boot-text" id="bootLine3"></div>
+                <span class="typing-cursor" id="scene1Cursor"></span>
+            </div>
+            
+            <!-- Scene 2: System Check -->
+            <div class="scene" id="scene2">
+                <div class="check-item" id="check1"></div>
+                <div class="check-item" id="check2"></div>
+                <div class="check-item" id="check3"></div>
+                <span class="typing-cursor" id="scene2Cursor"></span>
+            </div>
+            
+            <!-- Scene 3: Variables Declaration -->
+            <div class="scene" id="scene3">
+                <div class="code-block" id="variablesCode">
+                    <span class="code-line" id="variableLine1"></span>
+                    <span class="code-line" id="variableLine2"></span>
+                    <span class="code-line" id="variableLine3"></span>
+                </div>
+                <span class="typing-cursor" id="scene3Cursor"></span>
+            </div>
+            
+            <!-- Scene 4: Conditional Logic -->
+            <div class="scene" id="scene4">
+                <div class="code-block" id="conditionalCode">
+                    <span class="code-line" id="conditionalLine1"></span>
+                    <span class="code-line" id="conditionalLine2"></span>
+                    <span class="code-line" id="conditionalLine3"></span>
+                </div>
+                <div class="flash" id="flash"></div>
+                <span class="typing-cursor" id="scene4Cursor"></span>
+            </div>
+            
+            <!-- Scene 5: Function Execution -->
+            <div class="scene" id="scene5">
+                <div class="code-block" id="functionCode">
+                    <span class="code-line" id="functionLine1"></span>
+                    <span class="code-line" id="functionLine2"></span>
+                    <span class="code-line" id="functionLine3"></span>
+                </div>
+                <div class="console-output" id="consoleOutput"></div>
+                <div class="cake-emoji" id="cakeEmoji">🎂</div>
+                <span class="typing-cursor" id="scene5Cursor"></span>
+            </div>
+            
+            <!-- Scene 6: Emotional Payload -->
+            <div class="scene" id="scene6">
+                <h2 style="color: #0af50a; font-size: 32px; margin-bottom: 20px;" id="wishTitle">May your life have:</h2>
+                <ul class="wish-list">
+                    <li class="wish-item" id="wish1"></li>
+                    <li class="wish-item" id="wish2"></li>
+                    <li class="wish-item" id="wish3"></li>
+                    <li class="wish-item" id="wish4"></li>
+                    <li class="wish-item" id="wish5"></li>
+                </ul>
+                <span class="typing-cursor" id="scene6Cursor"></span>
+            </div>
+            
+            <!-- Scene 7: Final Output -->
+            <div class="scene" id="scene7">
+                <div class="final-title" id="finalTitle"></div>
+                <div class="final-subtitle" id="finalSubtitle"></div>
+                <span class="typing-cursor" id="scene7Cursor"></span>
+            </div>
+            
+            <!-- Scene 8: End Credits -->
+            <div class="scene" id="scene8">
+                <div class="boot-text" id="credit1"></div>
+                <div class="boot-text" id="credit2"></div>
+                <div class="boot-text" id="credit3"></div>
+                <span class="typing-cursor" id="scene8Cursor"></span>
+            </div>
+        </div>
+    </div>
+    <div id="fadeOverlay"></div>
+    <div id="birthdayMessage">🎉 Wish you a very Happy Birthday! 🎉</div>
+    
+    <div class="controls" id="controls" style="display: none;">
+        <button class="btn" id="restartBtn"><i class="fas fa-redo"></i> Restart Animation</button>
+        <button class="btn btn-active" id="musicBtn"><i class="fas fa-music"></i> Music: ON</button>
+        <button class="btn btn-active" id="soundBtn"><i class="fas fa-volume-up"></i> Sounds: ON</button>
+    </div>
+    
+    <div class="audio-controls" id="audioControls" style="display: none;">
+        <i class="fas fa-volume-down" style="color: #666;"></i>
+        <input type="range" min="0" max="100" value="70" class="volume-slider" id="volumeSlider">
+        <i class="fas fa-volume-up" style="color: #666;"></i>
+    </div>
+    
+    <!-- Audio elements with local file paths -->
+    <audio id="bgMusic" loop>
+        <!-- Replace with your actual file path -->
+        <source src="audio/bg-music.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    
+    <audio id="typingSound">
+        <!-- Replace with your actual file path -->
+        <source src="audio/typing.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    
+    <audio id="successSound">
+        <!-- Replace with your actual file path -->
+        <source src="audio/success.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    
+    <audio id="celebrationSound">
+        <!-- Replace with your actual file path -->
+        <source src="audio/celebration.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    
+    <audio id="confettiSound">
+        <!-- Replace with your actual file path -->
+        <source src="audio/confetti.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <script>
+        // DOM Elements
+        const startScreen = document.querySelector('.start-screen');
+        const startBtn = document.getElementById('startBtn');
+        const terminalContainer = document.getElementById('terminalContainer');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const controls = document.getElementById('controls');
+        const audioControls = document.getElementById('audioControls');
+        const scenes = document.querySelectorAll('.scene');
+        const friendNameInput = document.getElementById('friendName');
+        const restartBtn = document.getElementById('restartBtn');
+        const musicBtn = document.getElementById('musicBtn');
+        const soundBtn = document.getElementById('soundBtn');
+        const volumeSlider = document.getElementById('volumeSlider');
+        
+        // Audio elements
+        const bgMusic = document.getElementById('bgMusic');
+        const typingSound = document.getElementById('typingSound');
+        const successSound = document.getElementById('successSound');
+        const celebrationSound = document.getElementById('celebrationSound');
+        const confettiSound = document.getElementById('confettiSound');
+        
+        // Animation state
+        let currentScene = 1;
+        let totalScenes = 8;
+        let musicEnabled = true;
+        let soundsEnabled = true;
+        let animationPlaying = false;
+        let friendName = "Muhammad Noman";
+        let typingTimeout = null;
+        
+        // Text content for each scene (with typing effect)
+        const sceneTexts = {
+            scene1: [
+                "> Initializing Birthday Protocol...",
+                "> Loading friendship.core ❤️",
+                "> Compiling prayers.exe 🤲"
+            ],
+
+            scene2: [
+                "✔ Health status: STABLE 🩺",
+                "✔ Peace of heart: ACTIVE 🤍",
+                "✔ Friend status: BLESSED ✅"
+            ],
+
+            scene3: [
+                "<span class='keyword'>let</span> friend = <span class='string' id='friendVariable'>\"Muhammad Noman\"</span>;",
+                "<span class='keyword'>let</span> age = age + <span class='number'>1</span>;",
+                "<span class='keyword'>let</span> blessings = <span class='number'>Infinity</span>;"
+            ],
+
+            scene4: [
+                "<span class='keyword'>if</span> (today === friend.birthday) {",
+                "&nbsp;&nbsp;&nbsp;&nbsp;<span class='function' id='celebrateFunction'>sendDua()</span>;",
+                "}"
+            ],
+
+            scene5: [
+                "<span class='keyword'>function</span> <span class='function'>sendDua</span>() {",
+                "&nbsp;&nbsp;&nbsp;&nbsp;console.log(<span class='string'>\"May Allah grant you health, success, and peace 🤲\"</span>);",
+                "}"
+            ],
+
+            scene6: [
+                "✔ Strong faith",
+                "✔ Good health",
+                "✔ Halal success",
+                "✔ Peaceful heart",
+                "✔ Endless barakah"
+            ],
+
+            scene7: {
+                title: "🎂 HAPPY BIRTHDAY 🎂",
+                subtitle: "May Allah bless your year ahead<br>Grant you strength and wisdom<br>🤍"
+            },
+
+            scene8: [
+                "> Birthday sequence completed successfully.",
+                "> No errors detected.",
+                "> Friendship status: LIFETIME <span class='heart'>❤️</span>"
+            ]
+        };
+
+        
+        // Update friend name when input changes
+        friendNameInput.addEventListener('input', function() {
+            friendName = this.value || "Alex";
+        });
+        
+        // Start button click handler
+        startBtn.addEventListener('click', function() {
+            // Hide start screen
+            startScreen.style.display = 'none';
+            
+            // Show terminal and controls
+            terminalContainer.style.display = 'block';
+            progressContainer.style.display = 'block';
+            controls.style.display = 'flex';
+            audioControls.style.display = 'flex';
+            
+            // Initialize the animation
+            initAnimation();
+        });
+        
+        // Initialize the animation
+        function initAnimation() {
+            // Reset to first scene
+            currentScene = 1;
+            updateProgressBar();
+            showScene(1);
+            
+            // Reset all scene content
+            resetAllScenes();
+            
+            // Update friend name in scene 3
+            updateFriendName();
+            
+            // Start background music if enabled
+            if (musicEnabled) {
+                bgMusic.volume = (volumeSlider.value / 100) * 0.15;
+                bgMusic.play().catch(e => {
+                    console.log("Autoplay prevented, user interaction required:", e);
+                    // Show a message to user to click to enable audio
+                    musicBtn.textContent = "Click to enable music";
+                });
+            }
+            
+            // Start the animation sequence
+            setTimeout(() => {
+                playScene1();
+            }, 500);
+        }
+        
+        // Reset all scenes to empty
+        function resetAllScenes() {
+            // Clear all scene content
+            for (let i = 1; i <= totalScenes; i++) {
+                const scene = document.getElementById(`scene${i}`);
+                const elements = scene.querySelectorAll('[id^="scene"][id$="Line"], [id^="check"], [id^="wish"], [id^="credit"], [id^="bootLine"]');
+                elements.forEach(el => {
+                    if (el.id !== 'friendVariable') {
+                        el.innerHTML = '';
+                    }
+                });
+                
+                // Hide cake emoji
+                const cakeEmoji = document.getElementById('cakeEmoji');
+                if (cakeEmoji) {
+                    cakeEmoji.classList.remove('pop');
+                }
+                
+                // Hide console output
+                const consoleOutput = document.getElementById('consoleOutput');
+                if (consoleOutput) {
+                    consoleOutput.classList.remove('show');
+                    consoleOutput.innerHTML = '';
+                }
+                
+                // Reset final title and subtitle
+                const finalTitle = document.getElementById('finalTitle');
+                if (finalTitle) {
+                    finalTitle.classList.remove('show');
+                    finalTitle.innerHTML = '';
+                }
+                
+                const finalSubtitle = document.getElementById('finalSubtitle');
+                if (finalSubtitle) {
+                    finalSubtitle.classList.remove('show');
+                    finalSubtitle.innerHTML = '';
+                }
+            }
+        }
+        
+        // Update friend name in the code
+        function updateFriendName() {
+            const friendVariable = document.getElementById('friendVariable');
+            if (friendVariable) {
+                friendVariable.textContent = `"${friendName}"`;
+            }
+            
+            // Also update in scene 3 text
+            sceneTexts.scene3[0] = `<span class='keyword'>let</span> friend = <span class='string' id='friendVariable'>"${friendName}"</span>;`;
+        }
+        
+        // Update progress bar
+        function updateProgressBar() {
+            const progress = ((currentScene - 1) / (totalScenes - 1)) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+        
+        // Show a specific scene
+        function showScene(sceneNumber) {
+            scenes.forEach(scene => {
+                scene.classList.remove('active');
+            });
+            
+            const scene = document.getElementById(`scene${sceneNumber}`);
+            if (scene) {
+                scene.classList.add('active');
+            }
+            
+            currentScene = sceneNumber;
+            updateProgressBar();
+        }
+        
+        // Type text with cursor effect
+        function typeText(element, text, speed, callback, cursorId = null) {
+            let i = 0;
+            element.innerHTML = "";
+            
+            // Show cursor if specified
+            if (cursorId) {
+                const cursor = document.getElementById(cursorId);
+                if (cursor) cursor.style.display = 'inline-block';
+            }
+            
+            // Play typing sound if enabled
+            if (soundsEnabled && speed < 100) {
+                typingSound.currentTime = 0;
+                typingSound.volume = volumeSlider.value / 100 * 0.3;
+                typingSound.play();
+            }
+            
+            const typeChar = () => {
+                if (i < text.length) {
+                    // Handle HTML tags
+                    if (text.substring(i, i + 1) === '<') {
+                        // Find closing tag
+                        const tagEnd = text.indexOf('>', i) + 1;
+                        element.innerHTML += text.substring(i, tagEnd);
+                        i = tagEnd;
+                    } else {
+                        element.innerHTML += text.charAt(i);
+                        i++;
+                    }
+                    
+                    typingTimeout = setTimeout(typeChar, speed);
+                } else {
+                    // Hide cursor when done
+                    if (cursorId) {
+                        const cursor = document.getElementById(cursorId);
+                        if (cursor) cursor.style.display = 'none';
+                    }
+                    
+                    // Stop typing sound
+                    if (soundsEnabled) {
+                        typingSound.pause();
+                    }
+                    
+                    if (callback) callback();
+                }
+            };
+            
+            typeChar();
+        }
+        
+        // Type multiple lines sequentially
+        function typeLines(lineElements, texts, speed, lineCallback, finalCallback) {
+            let currentLine = 0;
+            
+            function typeNextLine() {
+                if (currentLine < lineElements.length) {
+                    typeText(lineElements[currentLine], texts[currentLine], speed, () => {
+                        currentLine++;
+                        if (lineCallback) lineCallback(currentLine - 1);
+                        typeNextLine();
+                    }, `scene${currentScene}Cursor`);
+                } else {
+                    if (finalCallback) finalCallback();
+                }
+            }
+            
+            typeNextLine();
+        }
+        
+        // Play sound if enabled
+        function playSound(soundElement) {
+            if (!soundsEnabled) return;
+            
+            soundElement.currentTime = 0;
+            soundElement.volume = volumeSlider.value / 100;
+            soundElement.play().catch(e => console.log("Sound play error:", e));
+        }
+        
+        // Scene 1: Boot Sequence
+        function playScene1() {
+            const line1 = document.getElementById('bootLine1');
+            const line2 = document.getElementById('bootLine2');
+            const line3 = document.getElementById('bootLine3');
+            
+            typeLines(
+                [line1, line2, line3],
+                sceneTexts.scene1,
+                50,
+                null,
+                () => {
+                    // Move to next scene
+                    setTimeout(() => {
+                        showScene(2);
+                        playScene2();
+                    }, 800);
+                }
+            );
+        }
+        
+        // Scene 2: System Check
+        function playScene2() {
+            const check1 = document.getElementById('check1');
+            const check2 = document.getElementById('check2');
+            const check3 = document.getElementById('check3');
+            
+            // Make elements visible
+            check1.classList.add('show');
+            check2.classList.add('show');
+            check3.classList.add('show');
+            
+            typeLines(
+                [check1, check2, check3],
+                sceneTexts.scene2,
+                60,
+                (lineIndex) => {
+                    playSound(successSound);
+                },
+                () => {
+                    // Move to next scene
+                    setTimeout(() => {
+                        showScene(3);
+                        playScene3();
+                    }, 1000);
+                }
+            );
+        }
+        
+        // Scene 3: Variables Declaration
+        function playScene3() {
+            const line1 = document.getElementById('variableLine1');
+            const line2 = document.getElementById('variableLine2');
+            const line3 = document.getElementById('variableLine3');
+            const codeBlock = document.getElementById('variablesCode');
+            
+            // Make code block visible
+            codeBlock.classList.add('show');
+            
+            typeLines(
+                [line1, line2, line3],
+                sceneTexts.scene3,
+                70,
+                null,
+                () => {
+                    playSound(successSound);
+                    
+                    // Move to next scene
+                    setTimeout(() => {
+                        showScene(4);
+                        playScene4();
+                    }, 1200);
+                }
+            );
+        }
+        
+        // Scene 4: Conditional Logic
+        function playScene4() {
+            const line1 = document.getElementById('conditionalLine1');
+            const line2 = document.getElementById('conditionalLine2');
+            const line3 = document.getElementById('conditionalLine3');
+            const codeBlock = document.getElementById('conditionalCode');
+            const flash = document.getElementById('flash');
+            const celebrateFunction = document.getElementById('celebrateFunction');
+            
+            // Make code block visible
+            codeBlock.classList.add('show');
+            
+            typeLines(
+                [line1, line2, line3],
+                sceneTexts.scene4,
+                70,
+                null,
+                () => {
+                    // Highlight function and flash
+                    setTimeout(() => {
+                        if (celebrateFunction) {
+                            celebrateFunction.style.color = '#ffeb3b';
+                            celebrateFunction.style.textShadow = '0 0 10px #ffeb3b';
+                        }
+                        flash.classList.add('active');
+                        playSound(celebrationSound);
+                        
+                        // Move to next scene
+                        setTimeout(() => {
+                            showScene(5);
+                            playScene5();
+                        }, 1000);
+                    }, 500);
+                }
+            );
+        }
+        
+        // Scene 5: Function Execution
+        function playScene5() {
+            const line1 = document.getElementById('functionLine1');
+            const line2 = document.getElementById('functionLine2');
+            const line3 = document.getElementById('functionLine3');
+            const codeBlock = document.getElementById('functionCode');
+            const consoleOutput = document.getElementById('consoleOutput');
+            const cakeEmoji = document.getElementById('cakeEmoji');
+            
+            // Make code block visible
+            codeBlock.classList.add('show');
+            
+            typeLines(
+                [line1, line2, line3],
+                sceneTexts.scene5,
+                70,
+                null,
+                () => {
+                    // Show console output
+                    setTimeout(() => {
+                        consoleOutput.classList.add('show');
+                        typeText(consoleOutput, `Happy Birthday, ${friendName} 🎂`, 60, () => {
+                            playSound(celebrationSound);
+                            
+                            // Pop cake emoji
+                            setTimeout(() => {
+                                cakeEmoji.classList.add('pop');
+                                playSound(confettiSound);
+                                
+                                // Trigger confetti
+                                confetti({
+                                    particleCount: 100,
+                                    spread: 70,
+                                    origin: { y: 0.6 }
+                                });
+                                
+                                // Move to next scene
+                                setTimeout(() => {
+                                    showScene(6);
+                                    playScene6();
+                                }, 2000);
+                            }, 800);
+                        }, `scene5Cursor`);
+                    }, 500);
+                }
+            );
+        }
+        
+        // Scene 6: Emotional Payload
+        function playScene6() {
+            const wish1 = document.getElementById('wish1');
+            const wish2 = document.getElementById('wish2');
+            const wish3 = document.getElementById('wish3');
+            const wish4 = document.getElementById('wish4');
+            const wish5 = document.getElementById('wish5');
+            
+            // Make wish items visible
+            wish1.classList.add('show');
+            wish2.classList.add('show');
+            wish3.classList.add('show');
+            wish4.classList.add('show');
+            wish5.classList.add('show');
+            
+            typeLines(
+                [wish1, wish2, wish3, wish4, wish5],
+                sceneTexts.scene6,
+                70,
+                (lineIndex) => {
+                    playSound(successSound);
+                    
+                    // Trigger confetti on last wish
+                    if (lineIndex === sceneTexts.scene6.length - 1) {
+                        setTimeout(() => {
+                            playSound(confettiSound);
+                            confetti({
+                                particleCount: 150,
+                                spread: 100,
+                                origin: { y: 0.6 }
+                            });
+                        }, 300);
+                    }
+                },
+                () => {
+                    // Move to next scene
+                    setTimeout(() => {
+                        showScene(7);
+                        playScene7();
+                    }, 1500);
+                }
+            );
+        }
+        
+        // Scene 7: Final Output
+        function playScene7() {
+            const finalTitle = document.getElementById('finalTitle');
+            const finalSubtitle = document.getElementById('finalSubtitle');
+            
+            // Type title
+            typeText(finalTitle, sceneTexts.scene7.title, 110, () => {
+                finalTitle.classList.add('show');
+                playSound(celebrationSound);
+                
+                // Big confetti burst
+                confetti({
+                    particleCount: 200,
+                    spread: 100,
+                    origin: { y: 0.5 }
+                });
+                
+                // Type subtitle
+                setTimeout(() => {
+                    finalSubtitle.innerHTML = sceneTexts.scene7.subtitle;
+                    finalSubtitle.classList.add('show');
+                    
+                    // Move to next scene
+                    setTimeout(() => {
+                        showScene(8);
+                        playScene8();
+                    }, 3000);
+                }, 1000);
+            }, `scene7Cursor`);
+        }
+        
+        // Scene 8: End Credits
+        function playScene8() {
+            const credit1 = document.getElementById('credit1');
+            const credit2 = document.getElementById('credit2');
+            const credit3 = document.getElementById('credit3');
+            
+            typeLines(
+                [credit1, credit2, credit3],
+                sceneTexts.scene8,
+                60,
+                null,
+                () => {
+                    // Final confetti
+                    setTimeout(() => {
+                        playSound(confettiSound);
+                        playScene9();
+                        confetti({
+                            particleCount: 300,
+                            spread: 120,
+                            origin: { y: 0.7 }
+                        });
+                    }, 500);
+                }
+            );
+        }
+        
+        function playScene9() {
+            // Fade to black
+            const fadeOverlay = document.getElementById('fadeOverlay');
+            const birthdayMessage = document.getElementById('birthdayMessage');
+    
+            setTimeout(() => {
+                fadeOverlay.style.opacity = 1; // Fade to black
+                playSound(celebrationSound);
+    
+                // Show birthday message after fade
+                setTimeout(() => {
+                    birthdayMessage.style.opacity = 1;
+                }, 3000); // Match this with your fade duration
+            }, 1500); // Slight delay after credits
+        }
+
+
+        
+        // Event listeners for controls
+        restartBtn.addEventListener('click', function() {
+            // Clear any ongoing typing
+            if (typingTimeout) {
+                clearTimeout(typingTimeout);
+            }
+            
+            // Stop all audio
+            bgMusic.pause();
+            typingSound.pause();
+            successSound.pause();
+            celebrationSound.pause();
+            confettiSound.pause();
+            
+            // Re-initialize animation
+            initAnimation();
+        });
+        
+        musicBtn.addEventListener('click', function() {
+            musicEnabled = !musicEnabled;
+            this.classList.toggle('btn-active');
+            this.innerHTML = musicEnabled ? 
+                '<i class="fas fa-music"></i> Music: ON' : 
+                '<i class="fas fa-music"></i> Music: OFF';
+            
+            if (musicEnabled) {
+                bgMusic.volume = (volumeSlider.value / 100) * 0.15;
+                bgMusic.play().catch(e => console.log("Playback prevented:", e));
+            } else {
+                bgMusic.pause();
+            }
+        });
+        
+        soundBtn.addEventListener('click', function() {
+            soundsEnabled = !soundsEnabled;
+            this.classList.toggle('btn-active');
+            this.innerHTML = soundsEnabled ? 
+                '<i class="fas fa-volume-up"></i> Sounds: ON' : 
+                '<i class="fas fa-volume-up"></i> Sounds: OFF';
+        });
+        
+        volumeSlider.addEventListener('input', function() {
+            const volume = this.value / 100;
+            bgMusic.volume = volume * 0.1;
+            typingSound.volume = volume; // Typing is quieter
+            successSound.volume = volume;
+            celebrationSound.volume = volume;
+            confettiSound.volume = volume;
+        });
+        
+        // Handle autoplay restrictions
+        document.addEventListener('click', function() {
+            if (musicEnabled && bgMusic.paused && animationPlaying) {
+                bgMusic.play().catch(e => console.log("Playback prevented:", e));
+            }
+        });
+        
+        // Set animation playing flag when animation starts
+        setTimeout(() => {
+            animationPlaying = true;
+        }, 1000);
+    </script>
+</body>
+</html>
